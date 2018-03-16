@@ -84,16 +84,23 @@ public class UploadController {
         return "uploadStatus";
     }
     
-    @RequestMapping(value="/downloadFile")
+    @RequestMapping(value="{username}/downloadFile")
     public void getLogFile(
-    		@RequestParam("file") String encodedString,
+    		@RequestParam("username") String username,
+    		@RequestParam("file") String encryptedString,
     		HttpServletResponse response) throws Exception {
     	String decodeString = null;
-    	if(!StringUtils.isEmpty(encodedString)) 
-    		decodeString = new String(Base64.getDecoder().decode(encodedString));
+    	if(!StringUtils.isEmpty(encryptedString)) 
+    		decodeString = new String(Base64.getDecoder().decode(aesenc.decrypt(encryptedString)));
     	else {
     		throw new Exception("Invalid Url Call");
     	}
+    	
+    	String timeStamp = decodeString.split("+")[0];
+    	String fileName = decodeString.split("+")[0];
+    	
+    	
+    	
         try {
         	/*String fileName="a.docx";
             File file = new File(rootDirectoryPath + fileName);
