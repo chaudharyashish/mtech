@@ -9,11 +9,13 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-public class SendMailSSL {
-	public static void main(String[] args) {
+import org.springframework.stereotype.Component;
+
+@Component
+public class SendMail {
+	public void sendEmail(String fileName, String fileUrl, String toUserName, String fromUsername, String toEmail) {
 		
 		String from = "filelinkshared@gmail.com";
-		String to = "filelinkshared@gmail.com";
 		String password = "zaq1!QAZ";
 		Properties props = new Properties();
 		props.put("mail.smtp.host", "smtp.gmail.com");
@@ -35,14 +37,14 @@ public class SendMailSSL {
 			Message message = new MimeMessage(session);
 			message.setFrom(new InternetAddress(from));
 			message.setRecipients(Message.RecipientType.TO,
-					InternetAddress.parse(to));
+					InternetAddress.parse(toEmail));
 			message.setSubject("Shared File");
-			message.setText("Hi, Please find below the link of shared file. This link is valid for 1 minute only." +
-					"\n\n No spam to my email, please!");
+			message.setText("Hi "+toUserName+",\n\n Please find below the link of shared file which is shared with you by "+fromUsername+".\n This link is valid for 1 minute only." +
+					"\n\n"+fileUrl);
 
 			Transport.send(message);
 
-			System.out.println("Done");
+			System.out.println("Email Sent!!");
 
 		} catch (MessagingException e) {
 			throw new RuntimeException(e);
