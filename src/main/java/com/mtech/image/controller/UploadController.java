@@ -44,8 +44,8 @@ public class UploadController {
 	@Value("${server.contextPath}")
 	private String contextPath;
 
-	@Value("${linkValidityTimeInMinutes}")
-	private String linkValidityTimeInMinutes;
+	@Value("${linkValidityTimeInSeconds}")
+	private String linkValidityTimeInSeconds;
 
 	@Value("${max-file-size}")
 	private String maxFileSize;
@@ -73,18 +73,6 @@ public class UploadController {
 			return m;
 		}
 		
-		if(file.getOriginalFilename().split("\\.")[1].equalsIgnoreCase(".exe")) {
-			m.addObject("errorFlag", true);
-			m.addObject("message", "Exe files not allowed.");
-			return m;
-		}
-		
-/*		if(Long.parseLong(maxFileSize)*1024*1024 <= file.getSize()*1024*1024) {
-			m.addObject("errorFlag", true);
-			m.addObject("message", "Size of file should be less than 10 MegaBytes.");
-			return m;
-		}*/
-
 		if(StringUtils.isEmpty(emailToShare)) {
 			m.addObject("errorFlag", true);
 			m.addObject("message", "Enter an email address.");
@@ -112,17 +100,21 @@ public class UploadController {
 
 			User loggedInUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 			String filePath= domainName + contextPath 
-					+"/downloadFile?username="+loggedInUser.getFirstName()
-					+ "&file=" + URLEncoder.encode(aesenc.encrypt((new Date().getTime()+"|"+file.getOriginalFilename()).toString()),"UTF8");
+					+"/downloadFile?file=" + URLEncoder.encode(aesenc.encrypt((new Date().getTime()+"|"+file.getOriginalFilename()).toString()),"UTF8");
 
 			sendMail.sendEmail(
 					file.getOriginalFilename(), 
 					filePath, 
 					"",
 					loggedInUser.getFirstName()+(StringUtils.isEmpty(loggedInUser.getLastName())?"":loggedInUser.getLastName()), 
-					emailToShare);
+					emailToShare,
+					linkValidityTimeInSeconds);
 			m.addObject("errorFlag", false);
-			m.addObject("message", "File uploaded successfully. Email sent to reciever with a link which is valid for 1 minute only.");
+			m.addObject("message", "File shared successfully. Email sent to reciever with a link which is valid for " + 
+							((Long.parseLong(linkValidityTimeInSeconds) < 60) 
+							? linkValidityTimeInSeconds+" seconds" 
+							: Long.parseLong(linkValidityTimeInSeconds)/60+" minutes")
+						+" only.");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -143,7 +135,6 @@ public class UploadController {
 
 	@RequestMapping(value="/downloadFile")
 	public void getLogFile(
-			@RequestParam("username") String username,
 			@RequestParam("file") String encryptedString,
 			HttpServletResponse response) throws Exception {
 		String decodeString = null;
@@ -175,7 +166,7 @@ public class UploadController {
 	}
 
 	private boolean checkIfTimeIsPast(String timeInMillis) {
-		if(new Date().getTime() - Long.parseLong(timeInMillis) >= (Integer.parseInt(linkValidityTimeInMinutes)*1000)) {
+		if(new Date().getTime() - Long.parseLong(timeInMillis) >= (Integer.parseInt(linkValidityTimeInSeconds)*1000)) {
 			return false;
 		}
 		return true;

@@ -1,6 +1,5 @@
 package com.mtech.image.utiities;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Properties;
 
 import javax.mail.Authenticator;
@@ -17,7 +16,8 @@ import org.springframework.util.StringUtils;
 
 @Component
 public class SendMail {
-	public void sendEmail(String fileName, String fileUrl, String toUserName, String fromUserName, String toEmail) throws Exception {
+	public void sendEmail(String fileName, String fileUrl, String toUserName, String fromUserName, 
+			String toEmail, String linkValidityTimeInSeconds) throws Exception {
 		
 		try {
 			
@@ -32,7 +32,7 @@ public class SendMail {
             Session session = Session.getInstance(props, new EmailAuth());
             Message msg = new MimeMessage(session);
             
-            InternetAddress from = new InternetAddress(sendersEmailAddress, fromUserName);
+            InternetAddress from = new InternetAddress(sendersEmailAddress);
             msg.setFrom(from);
             
             InternetAddress toAddress = new InternetAddress(toEmail);
@@ -46,13 +46,15 @@ public class SendMail {
                     "A file with name <i>"+ fileName + "</i> is shared by <i>"+ fromUserName+".</i> Please find a link to the file below.\n<br/>"+
                     "<a href=\""+fileUrl+"\">\n" +
                     ""+fileName+"</a>\n\n<br/><br/>" +
-                    "<i>Note:This link is valid for 1 minute only.</i>"+
+                    "<i>Note:This link is valid for "+
+                    	((Long.parseLong(linkValidityTimeInSeconds) < 60) 
+                    		? linkValidityTimeInSeconds+" seconds"
+                    		: Long.parseLong(linkValidityTimeInSeconds)/60+" minutes")
+                    +" only.</i>"+
                     "</body>\n" +
                     "</html>", "text/html");
             
             Transport.send(msg);
-        } catch (UnsupportedEncodingException ex) {
-            ex.printStackTrace();
         } catch (MessagingException ex) {
             ex.printStackTrace();
         }
