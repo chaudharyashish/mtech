@@ -46,7 +46,8 @@ public class UserDetailsServiceImpl implements UserDetailsService{
         User userToReturn = new User(userFromDatabase.getUsername(), userFromDatabase.getPassword(), 
         							userFromDatabase.isEnabled(), userFromDatabase.isAccountNonExpired(), 
         							userFromDatabase.isAccountNonExpired(), userFromDatabase.isAccountNonLocked(), 
-        							grantedAuthorities, modules, roles);
+        							grantedAuthorities, modules, roles, 
+        							userFromDatabase.getFirstName(), userFromDatabase.getLastName());
         return userToReturn;
         
         

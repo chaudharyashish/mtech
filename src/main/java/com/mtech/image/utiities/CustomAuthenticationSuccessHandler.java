@@ -1,7 +1,6 @@
 package com.mtech.image.utiities;
 
 import java.io.IOException;
-import java.util.Enumeration;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -29,13 +28,15 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 		UserToken token = securityService.generateAccessToken((User)auth.getPrincipal());
 		request.getSession().setAttribute("token", token.getToken());
 
-		Enumeration<String> params = request.getParameterNames();
+		/*Enumeration<String> params = request.getParameterNames();
 		String module = null;
 		while (params.hasMoreElements()) {
 			String paramName = (String) params.nextElement();
 			if(paramName.equals("module"))
 				module = request.getParameter(paramName); 
 		}
-		response.sendRedirect("welcome?module="+module);
+		response.sendRedirect("welcome?module="+module);*/
+		
+		response.sendRedirect("upload");
 	}
 }

@@ -1,4 +1,4 @@
-<%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
+\<%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 
@@ -63,6 +63,22 @@
             </div>
         </spring:bind>
 
+		<spring:bind path="firstName">
+            <div class="form-group ${status.error ? 'has-error' : ''}">
+                <form:input type="text" path="firstName" class="form-control"
+                            placeholder="Enter first name"></form:input>
+                <form:errors path="firstName"></form:errors>
+            </div>
+        </spring:bind>
+        
+        <spring:bind path="lastName">
+            <div class="form-group ${status.error ? 'has-error' : ''}">
+                <form:input type="text" path="lastName" class="form-control"
+                            placeholder="Enter last name"></form:input>
+                <form:errors path="lastName"></form:errors>
+            </div>
+        </spring:bind>
+        
         <button class="btn btn-lg btn-primary btn-block" type="submit">Submit</button>
     </form:form>
 

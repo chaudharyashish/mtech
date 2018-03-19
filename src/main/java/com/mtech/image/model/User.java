@@ -29,6 +29,8 @@ public class User extends org.springframework.security.core.userdetails.User {
     //private String passwordConfirm;
     private String username = super.getUsername();
 	private String password = super.getPassword();
+	private String firstName;
+	private String lastName;
     private Set<Role> roles;
     private Set<Modules> modules;
     
@@ -36,21 +38,35 @@ public class User extends org.springframework.security.core.userdetails.User {
     	this("dummy username", "dummy password", new HashSet<>());
     }
 
-	public User(String username, String password, Collection<? extends GrantedAuthority> authorities) {
+    public User(String username, String password, 
+			Collection<? extends GrantedAuthority> authorities) {
 		super(username, password, authorities);
 	}
+    
+	public User(String username, String password, 
+			Collection<? extends GrantedAuthority> authorities, 
+			String firstName, String lastName) {
+		super(username, password, authorities);
+		this.firstName = firstName;
+		this.lastName = lastName;
+	}
+	
+	
 
 	public User(String username, String password, boolean enabled,
             boolean accountNonExpired, boolean credentialsNonExpired,
             boolean accountNonLocked,
             Collection<? extends GrantedAuthority> authorities, 
-            Set<Modules> modules, Set<Role> roles) {
+            Set<Modules> modules, Set<Role> roles,
+            String firstName, String lastName) {
 		
     	super(username, password, enabled, accountNonExpired,
                 credentialsNonExpired, accountNonLocked, authorities);
 		
     	this.modules = modules;
     	this.roles = roles;
+    	this.firstName = firstName;
+		this.lastName = lastName;
 	}
 
     public static long getSerialversionuid() {
@@ -115,6 +131,22 @@ public class User extends org.springframework.security.core.userdetails.User {
 
 	public void setRoles(Set<Role> roles) {
 		this.roles = roles;
+	}
+
+	public String getFirstName() {
+		return firstName;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+
+	public String getLastName() {
+		return lastName;
+	}
+
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
 	}
  
 }

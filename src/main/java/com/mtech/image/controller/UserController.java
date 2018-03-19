@@ -46,7 +46,7 @@ public class UserController {
 	private RoleRepository roleRepository;
 
 	//Welcome
-	@RequestMapping(value = {"/", "/welcome"}, method = RequestMethod.GET)
+	@RequestMapping(value = {"/welcome"}, method = RequestMethod.GET)
 	public ModelAndView welcome(Model model, @RequestParam(name="module", defaultValue="sso") String moduleName,
 			HttpServletResponse response,
 			HttpSession httpSession) {
@@ -110,7 +110,7 @@ public class UserController {
 		User user = new User(userForm.getUsername(), userForm.getPassword(), grantedAuthorities);
 		userService.save(user);
 		securityService.autologin(userForm.getUsername(), userForm.getPasswordConfirm());
-		return "redirect:/welcome";
+		return "redirect:/upload";
 	}
 
     @RequestMapping(value="autologinsso")

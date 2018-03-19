@@ -12,21 +12,20 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication
 @EnableJpaAuditing
-public class MediaApplication extends SpringBootServletInitializer {
+public class UrlSecurityApplication extends SpringBootServletInitializer {
 
 	public static void main(String[] args) throws Exception {
-		SpringApplication.run(MediaApplication.class, args);
+		SpringApplication.run(UrlSecurityApplication.class, args);
 	}
 
 	@Override
 	protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-		return application.sources(MediaApplication.class);
+		return application.sources(UrlSecurityApplication.class);
 	}
 	
-	private int maxUploadSizeInMb = 10 * 1024 * 1024; // 10 MB
+	//private int maxUploadSizeInMb = 10 * 1024 * 1024; // 10 MB
 
     //Tomcat large file upload connection reset
-    //http://www.mkyong.com/spring/spring-file-upload-and-connection-reset-issue/
     @Bean
     public TomcatEmbeddedServletContainerFactory tomcatEmbedded() {
 

@@ -11,8 +11,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MultipartException.class)
     public String handleError1(MultipartException e, RedirectAttributes redirectAttributes) {
 
-        redirectAttributes.addFlashAttribute("message", e.getCause().getMessage());
-        return "redirect:/uploadStatus";
+    	redirectAttributes.addFlashAttribute("errorFlag", true);
+        redirectAttributes.addFlashAttribute("message", "Size of file should be less than 10 MegaBytes.");
+        return "redirect:/upload";
 
     }
 

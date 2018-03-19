@@ -1,12 +1,16 @@
 package com.mtech.image.utiities;
 
 import java.security.Key;
+
 import javax.crypto.Cipher;
-import sun.misc.BASE64Encoder;
-import sun.misc.BASE64Decoder;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.stereotype.Component;
+
+import sun.misc.BASE64Decoder;
+import sun.misc.BASE64Encoder;
+
 
 @Component
 public class AESenc {
@@ -26,7 +30,8 @@ public class AESenc {
         Cipher c = Cipher.getInstance(ALGO);
         c.init(Cipher.ENCRYPT_MODE, key);
         byte[] encVal = c.doFinal(data.getBytes());
-        return new BASE64Encoder().encode(encVal);
+        return new String(Base64.encodeBase64(encVal));
+        //return new String(encVal);
     }
 
     /**
@@ -39,8 +44,9 @@ public class AESenc {
         Key key = generateKey();
         Cipher c = Cipher.getInstance(ALGO);
         c.init(Cipher.DECRYPT_MODE, key);
-        byte[] decordedValue = new BASE64Decoder().decodeBuffer(encryptedData);
+        byte[] decordedValue = Base64.decodeBase64(encryptedData);
         byte[] decValue = c.doFinal(decordedValue);
+        //byte[] decValue = c.doFinal(encryptedData.getBytes("UTF-8"));
         return new String(decValue);
     }
 
