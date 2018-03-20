@@ -23,7 +23,7 @@
 	vertical-align: middle;
 	font-size: 2em;
 	font-weight: bold;
-	background-color: gray;
+	background-color: #141b9e;
 	color: white;
 }
 
@@ -47,7 +47,7 @@
 }
 
 .childUpperForm .colInfo{
-	width: 50%;
+	width: 40%;
 	text-align: right !important;
 }
 
@@ -74,7 +74,10 @@
 
 	<div class="parentDiv">
 		<div class="childDivUpper">
-			<div class="childUpperHeader">Upload your file and share it</div>
+			<div style="text-align: right;">
+				<a href="http://localhost:8080/urlSecure/logout?token=<%= session.getAttribute("token") %>">Logout</a>
+			</div>
+			<div class="childUpperHeader">Share your files.</div>
 			<div class="childUpperForm">
 				<form method="POST" action="upload" enctype="multipart/form-data">
 					<table>
@@ -83,8 +86,14 @@
 							<td class="colField"><input type="file" name="file" /></td>
 						</tr>
 						<tr>
-							<td class="colInfo">Enter email to share:</td>
-							<td class="colField"><input type="text" name="email"/></td>
+							<td class="colInfo">Select user to share:</td>
+							<td class="colField" style="vertical-align: top;">
+								<c:forEach items="${users}" var="user" varStatus="index">
+									<input type="checkbox" value="${user.username}" name="emailToShare"> 
+										${user.firstName}&nbsp;${user.lastName}&nbsp;(${user.username}) 
+									<br/>
+								</c:forEach>
+							</td>
 						</tr>
 						<tr>
 							<td colspan="2" style="text-align: center;"><input type="submit" value="Share & Email" /></td>
@@ -103,7 +112,6 @@
 				<span class="success">${message}</span>
 			</c:otherwise>
 			</c:choose>
-				
 		</div>
 	</div>
 </body>

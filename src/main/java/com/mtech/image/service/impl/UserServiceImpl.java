@@ -7,6 +7,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.mtech.image.model.User;
+import com.mtech.image.model.UserForm;
 import com.mtech.image.repository.ModuleRepository;
 import com.mtech.image.repository.RoleRepository;
 import com.mtech.image.repository.UserRepository;
@@ -31,9 +32,10 @@ public class UserServiceImpl implements UserService {
     
     
     @Override
-    public void save(User user) {
-        user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-        user.setRoles(new HashSet<>(roleRepository.findAll()));
+    public void save(UserForm userForm) {
+    	User user = new User(userForm.getUsername(), bCryptPasswordEncoder.encode(userForm.getPassword())
+    			, new HashSet<>(roleRepository.findAll()), true, true, true, true
+    			, userForm.getFirstName(), userForm.getLastName());
         user.setModules(new HashSet<>(moduleRepository.findAll()));
         userRepository.save(user);
     }

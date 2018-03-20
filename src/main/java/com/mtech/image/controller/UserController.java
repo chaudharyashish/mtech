@@ -1,15 +1,9 @@
 package com.mtech.image.controller;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,10 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.mtech.image.model.Role;
 import com.mtech.image.model.User;
 import com.mtech.image.model.UserForm;
-import com.mtech.image.repository.RoleRepository;
 import com.mtech.image.service.SecurityService;
 import com.mtech.image.service.UserService;
 import com.mtech.image.utiities.ApplicationConstants;
@@ -42,10 +34,6 @@ public class UserController {
 	@Autowired
 	private UserValidator userValidator;
 
-	@Autowired
-	private RoleRepository roleRepository;
-
-	//Welcome
 	@RequestMapping(value = {"/welcome"}, method = RequestMethod.GET)
 	public ModelAndView welcome(Model model, @RequestParam(name="module", defaultValue="sso") String moduleName,
 			HttpServletResponse response,
@@ -70,7 +58,6 @@ public class UserController {
 		}
 	}
 
-	//Login
 	@RequestMapping(value = "/login", method = RequestMethod.GET)
 	public ModelAndView login(
 			@RequestParam(name="module", defaultValue="sso") String moduleName,
@@ -87,7 +74,6 @@ public class UserController {
 		return modelAndView;
 	}
 
-	//Registration
 	@RequestMapping(value = "/registration", method = RequestMethod.GET)
 	public String registration(Model model) {
 		model.addAttribute("userForm", new UserForm());
@@ -102,14 +88,8 @@ public class UserController {
 		if (bindingResult.hasErrors()) {
 			return "registration";
 		}
-		List<Role> roles = roleRepository.findAll();
-		Set<GrantedAuthority> grantedAuthorities = new HashSet<>();
-		for (Role role : roles){
-			grantedAuthorities.add(new SimpleGrantedAuthority(role.getAuthority()));
-		}
-		User user = new User(userForm.getUsername(), userForm.getPassword(), grantedAuthorities);
-		userService.save(user);
-		securityService.autologin(userForm.getUsername(), userForm.getPasswordConfirm());
+		userService.save(userForm);
+		//securityService.autologin(userForm.getUsername(), userForm.getPasswordConfirm());
 		return "redirect:/upload";
 	}
 

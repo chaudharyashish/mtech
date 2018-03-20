@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
+import java.util.List;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,9 +28,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.mtech.image.model.User;
+import com.mtech.image.repository.UserRepository;
 import com.mtech.image.utiities.AESenc;
 import com.mtech.image.utiities.SendMail;
 
@@ -36,7 +38,7 @@ import com.mtech.image.utiities.SendMail;
 public class UploadController {
 
 	@Value("${rootPath}")
-	private String rootDirectoryPath;
+	private String rootDirectory;
 
 	@Value("${domainName}")
 	private String domainName;
@@ -50,73 +52,84 @@ public class UploadController {
 	@Value("${max-file-size}")
 	private String maxFileSize;
 	
-	@GetMapping("/upload")
-	public String index() {
-		return "upload";
-	}
-
 	@Autowired
 	private SendMail sendMail;
 
 	@Autowired
 	private AESenc aesenc;
+	
+	@Autowired
+	private UserRepository userRepository;
 
+	
+	@GetMapping("/upload")
+	public ModelAndView index() {
+		ModelAndView m = new ModelAndView("upload");
+		m.addObject("users", userRepository.findAll());
+		return m;
+	}
+	
 	@PostMapping("/upload")
-	public ModelAndView singleFileUpload(@RequestParam("file") MultipartFile file,
-			@RequestParam("email") String emailToShare, RedirectAttributes redirectAttributes) throws Exception {
+	public ModelAndView singleFileUpload(@RequestParam(name="file") MultipartFile file,
+			@RequestParam(name="emailToShare", required=false) List<String> emailToShare) throws Exception {
 
 		ModelAndView m = new ModelAndView("upload");
-		
+		m.addObject("users", userRepository.findAll());
 		if (file.isEmpty()) {
 			m.addObject("errorFlag", true);
 			m.addObject("message", "Select a file to share.");
 			return m;
 		}
-		
-		if(StringUtils.isEmpty(emailToShare)) {
+		else if(CollectionUtils.isEmpty(emailToShare)) {
 			m.addObject("errorFlag", true);
-			m.addObject("message", "Enter an email address.");
+			m.addObject("message", "Select atleast one email address.");
 			return m;
 		}
 		
-		if(!isValidEmailAddress(emailToShare)) {
-			m.addObject("errorFlag", true);
-			m.addObject("message", "Entered email address is incorrect.");
-			return m;
-		}
-
 		try {
+			String rootDirectoryPath = System.getProperty("user.home")+rootDirectory;
 			File fileObjectForRootdirectory = new File(rootDirectoryPath);
 			if(!fileObjectForRootdirectory.exists()) {
 				fileObjectForRootdirectory.mkdirs();
 			}
-
-			byte[] bytes = file.getBytes();
-			Path path = Paths.get(rootDirectoryPath + file.getOriginalFilename());
-			Files.write(path, bytes);
-
-			redirectAttributes.addFlashAttribute("message",
-					"You successfully uploaded '" + file.getOriginalFilename() + "'. Email Sent to user");
-
+			
 			User loggedInUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-			String filePath= domainName + contextPath 
-					+"/downloadFile?file=" + URLEncoder.encode(aesenc.encrypt((new Date().getTime()+"|"+file.getOriginalFilename()).toString()),"UTF8");
+			for (String email : emailToShare) {
+				File fileObjectForChildDirectory = new File(rootDirectoryPath+email);
+				if(!fileObjectForChildDirectory.exists()) {
+					fileObjectForChildDirectory.mkdirs();
+				}
 
-			sendMail.sendEmail(
+				byte[] bytes = file.getBytes();
+				Path path = Paths.get(rootDirectoryPath+ email +"//" + file.getOriginalFilename());
+				Files.write(path, bytes);
+
+				User toUser = userRepository.findByUsername(email);
+				String filePath= domainName + contextPath 
+						+"/download?param=" 
+						+ URLEncoder.encode(
+											aesenc.encrypt(
+												toUser.getUsername() +"|"+ 
+												new Date().getTime()+"|"+
+												file.getOriginalFilename())
+										,"UTF8");
+				sendMail.sendEmail(
 					file.getOriginalFilename(), 
 					filePath, 
-					"",
+					toUser.getFirstName(),
 					loggedInUser.getFirstName()+(StringUtils.isEmpty(loggedInUser.getLastName())?"":loggedInUser.getLastName()), 
-					emailToShare,
+					email,
 					linkValidityTimeInSeconds);
+			}
 			m.addObject("errorFlag", false);
-			m.addObject("message", "File shared successfully. Email sent to reciever with a link which is valid for " + 
+			m.addObject("message", "File shared successfully. Email sent to reciever(s) with a link which is valid for " + 
 							((Long.parseLong(linkValidityTimeInSeconds) < 60) 
 							? linkValidityTimeInSeconds+" seconds" 
 							: Long.parseLong(linkValidityTimeInSeconds)/60+" minutes")
 						+" only.");
 		} catch (IOException e) {
-			e.printStackTrace();
+			m.addObject("errorFlag", true);
+			m.addObject("message", e);
 		}
 
 		return m;
@@ -133,25 +146,31 @@ public class UploadController {
 		return result;
 	}
 
-	@RequestMapping(value="/downloadFile")
+	@RequestMapping(value="/download")
 	public void getLogFile(
-			@RequestParam("file") String encryptedString,
+			@RequestParam("param") String encryptedString,
 			HttpServletResponse response) throws Exception {
 		String decodeString = null;
 		if(!StringUtils.isEmpty(encryptedString)) 
 			decodeString = aesenc.decrypt(encryptedString);
 		else {
+			response.getWriter().write("Url is tempered. Invalud Url.");
 			throw new Exception("Invalid Url Call");
 		}
-
-		String timeStamp = decodeString.split("\\|")[0];
-		if(!checkIfTimeIsPast(timeStamp)) {
+		
+		String username = decodeString.split("\\|")[0];
+		String timeStamp = decodeString.split("\\|")[1];
+		if(null == userRepository.findByUsername(username)) {
+			response.getWriter().write("Invalid user is requesting");
+		}
+		else if(!checkIfTimeIsPast(timeStamp)) {
 			response.getWriter().write("Link Expired");
 		}
 		else {
-			String fileName = decodeString.split("\\|")[1];
+			String fileName = decodeString.split("\\|")[2];
 			try {
-				File file = new File(rootDirectoryPath + fileName);
+				String rootDirectoryPath = System.getProperty("user.home")+rootDirectory;
+				File file = new File(rootDirectoryPath + username +"//" + fileName);
 				InputStream inputStream = new FileInputStream(file);
 				response.setContentType("application/force-download");
 				response.setHeader("Content-Disposition", "attachment; filename="+fileName); 
@@ -159,6 +178,7 @@ public class UploadController {
 				response.flushBuffer();
 				inputStream.close();
 			} catch (Exception e){
+				response.getWriter().write(e.getMessage());
 				e.printStackTrace();
 			}
 		}

@@ -12,10 +12,16 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
+import org.springframework.security.core.GrantedAuthority;
+
 @Entity
 @Table(name = "role")
-public class Role{
+public class Role implements GrantedAuthority{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -548696414002745166L;
 	private Long id;
     private String authority;
     private Set<User> users;
@@ -52,7 +58,7 @@ public class Role{
     }
 
 
-    @ManyToMany(mappedBy = "roles", fetch=FetchType.EAGER, cascade=CascadeType.ALL)
+    @ManyToMany(mappedBy = "authorities", fetch=FetchType.EAGER, cascade=CascadeType.ALL)
     public Set<User> getUsers() {
         return users;
     }
